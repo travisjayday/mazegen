@@ -2,9 +2,9 @@
 An ASCII/Unicode maze generator and solver
 
 # examples
-![example1](/examples/Screenshot from 2017-09-04 18-32-03.png?raw=true "Example 1")
-![example2](/examples/Screenshot from 2017-09-04 18-32-03.png?raw=true "Example 1")
-
+![example1](/examples/default.png?raw=true "Default maze")
+![example2](/examples/large.png?raw=true "Large maze")
+![example3](/examples/custom.png?raw=true "Custom maze with verbose")
 
 # usage
 
