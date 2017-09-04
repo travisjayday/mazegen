@@ -8,7 +8,8 @@ An ASCII/Unicode maze generator and solver
 
 # usage
 
-```Mazegen 1.0 by Travis Ziegler
+```
+Mazegen 1.0 by Travis Ziegler
 Program to generate and solve ASCII/Unicode mazes
 
 Usage:  mazegen [-d width height] [-r delay] [-s delay] [-p char] [-w char] [-s char] [-v iter] [-o]
@@ -28,3 +29,7 @@ Options:
 Example: 
   mazegen -d 40 20 -r -s 50 -w █ -p . 
 ```
+Note: the -r and -s options enable realtime generation, meaning the maze is animated as it is being generated or solved. This leads to some rather cool visuals. 
+
+# thanks
+Special thanks to the Computerphile Youtube channel for inspiring me to implement these types of depth-first-search algorithms. It's been quite fun, and the outcome is just fantastic to look at. 
