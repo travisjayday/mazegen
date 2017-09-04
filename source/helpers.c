@@ -29,10 +29,10 @@ void print_maze()
 			p+= sprintf(buffer+p, "%s",  array[i][j]);
 		}
 	}
-//	if (!fileout)
-		printf("%s", buffer);	// move cursor to top of screen instead of clearing 
-//	else
-//		printf("jj%s", buffer); 
+	if (!fileout)
+		printf("\033[;H%s", buffer);	// move cursor to top of screen instead of clearing 
+	else
+		printf("%s", buffer); 		// just print regularlry
 }
 
 // gets random number inclusively. 

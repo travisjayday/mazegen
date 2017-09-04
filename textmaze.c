@@ -41,7 +41,6 @@ int main(int argc, char* argv[])
 	if (!fileout)
 	{
 		system("clear"); 
-		printf("\033[;H"); 
 	}
 
 	// handle verbose logic	
