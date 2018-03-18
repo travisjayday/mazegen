@@ -1,5 +1,16 @@
-#ifndef DFS_MAZEGEN_H_
-#define DFS_MAZEGEN_H_
+
+//
+//	file: header/mazegen.h
+//
+
+#ifndef MAZEGEN_H_
+#define MAZEGEN_H_
+
+#include "maze.h"
+#include "helpers.h"
+
+// needed vars for mazegen
+int pathd; 			// distance between end and start (needed for finding best/longest end position) 
 
 // generates numbers from 1 - 4 at random positions in array of size 4
 // used for randomly getting next direction 

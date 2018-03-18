@@ -1,5 +1,13 @@
-#ifndef DFS_MAZESOLVER_H_
-#define DFS_MAZESOLVER_H_
+
+//
+//	file: header/mazesolve.h
+//
+
+#ifndef MAZESOLVE_H_
+#define MAZESOLVE_H_
+
+#include "maze.h"
+#include "helpers.h"
 
 #define infinity 999999
 

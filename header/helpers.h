@@ -1,5 +1,23 @@
+
+//
+//	file: header/helpers.h
+//
+
 #ifndef HELPERS_H_
 #define HELPERS_H_
+
+#include "maze.h"
+#include "locale.h"
+
+// Linux system includes
+#include <stdlib.h>		// for rand and malloc
+#include <time.h> 		// for rand seed
+#include <sys/time.h> 	// needed for verbose gettimeofday microseconds
+#include <unistd.h> 	// for usleep
+#include <stdio.h>		// for i/o
+
+// initializes default values of maze struct
+void init_maze(); 
 
 // calculates the manhatten distance between two points
 float man_distance(int x, int y, int x2, int y2);

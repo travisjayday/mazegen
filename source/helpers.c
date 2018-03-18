@@ -1,5 +1,28 @@
+
+//
+//	file: source/helpers.c
+//
+
 #include "helpers.h"
-#include "locale.h"
+
+// initializaes maze with default arguments
+void init_maze() {
+	mz.rows = 21; 
+	mz.cols = 41; 
+	mz.delay = 0; 
+	mz.solv_delay = 0; 
+	mz.solving = 0; 
+	mz.wallc = "░"; 	
+	mz.solvc = "▓";
+	mz.pathc = " ";
+	mz.fileout = 0; 
+	mz.array = 0; 
+	mz.verbose = 0; 
+	mz.endx = 0; 
+	mz.endy = 0; 
+	mz.startx = 0; 
+	mz.starty = 0; 
+}
 
 // finds the manhatten distance between two points
 // benefit: do not use square root which is computationally expensive
@@ -20,22 +43,22 @@ void print_maze()
 	static char a = 0; 
 	if (!a) 
 	{
-		buffer = (char*) malloc(cols * rows * 4); 	// allocate enough memory; 1 unicode char = 4 bytes
+		buffer = (char*) malloc(mz.cols * mz.rows * 4); 	// allocate enough memory; 1 unicode char = 4 bytes
 		a = 1; 
 	}
 
 	int p = 0;
-	for (int i = 0; i < rows; i++) 
+	for (int i = 0; i < mz.rows; i++) 
 	{
-		for (int j = 0; j < cols + 1; j++)			// print newline char +1 
+		for (int j = 0; j < mz.cols + 1; j++)			// print newline char +1 
 		{
 			// write unicode char to buffer and increment offset pointer
 			// bar # of characters written (for next char) 
-			p += sprintf(buffer + p, "%s",  array[i][j]);
+			p += sprintf(buffer + p, "%s",  mz.array[i][j]);
 		}
 	}
 
-	if (!fileout)
+	if (!mz.fileout)
 		printf("\033[;H%s", buffer);	// move cursor to top of screen instead of clearing 
 	else
 		printf("%s", buffer); 			// just print regularlry
@@ -72,7 +95,7 @@ Example: \n\
 void handle_args(int argc, char* argv[])
 {
 	if (argc == 1)
-		solving = 1; 
+		mz.solving = 1; 
 
 	// loop through each arg
 	for (int i = 1; i < argc; i++) 
@@ -80,13 +103,13 @@ void handle_args(int argc, char* argv[])
 		// switch on second character (after the '-')
 		switch (*(argv[i]+1)) 
 		{
-			// set cols to next arg, and rows to next next arg (skip those next time by ++i) 
+			// set mz.cols to next arg, and mz.rows to next next arg (skip those next time by ++i) 
 			case 'd': 
-				cols = atoi(argv[++i]);
-				rows = atoi(argv[++i]);
+				mz.cols = atoi(argv[++i]);
+				mz.rows = atoi(argv[++i]);
 
 				// if dimensions are odd or below zero 
-				if ((cols % 2 == 0 || rows % 2 == 0) || (cols <= 0 || rows <= 0))
+				if ((mz.cols % 2 == 0 || mz.rows % 2 == 0) || (mz.cols <= 0 || mz.rows <= 0))
 				{
 					printf("Dimensions mustn't be even!"); 
 					fflush(stdout); 
@@ -97,48 +120,48 @@ void handle_args(int argc, char* argv[])
 			// set delay to argv + 1 if it's number and if it exists, else do default delay
 			case 'r':
 				if (argc >= i+2 && *argv[i+1] >= '0' && *argv[i+1] <= '9')
-					delay = atoi(argv[++i]) * 1000;
+					mz.delay = atoi(argv[++i]) * 1000;
 				else
-					delay = 60 * 1000; 
+					mz.delay = 60 * 1000; 
 				break;
 			
 			case 's':
 				if (argc >= i+2 && *argv[i+1] >= '0' && *argv[i+1] <= '9')
 				{
-					solv_delay = atoi(argv[++i]) * 1000;
-					solving = 1;
+					mz.solv_delay = atoi(argv[++i]) * 1000;
+					mz.solving = 1;
 				}
 				else
 				{
-					solv_delay = 0; 
-					solving = 1; 
+					mz.solv_delay = 0; 
+					mz.solving = 1; 
 				}
 				break;
 			
 
 			// set wallc to arg[++i]
 			case 'w':
-				wallc = argv[++i]; 
+				mz.wallc = argv[++i]; 
 				break;
 
 			// set pathc to next arg
 			case 'p':
-				pathc = argv[++i]; 
+				mz.pathc = argv[++i]; 
 				break;
 
 			case 'v':
 				if (argc >= i+2 && *argv[i+1] >= '0' && *argv[i+1] <= '9')
-					verbose = atoi(argv[++i]); 
+					mz.verbose = atoi(argv[++i]); 
 				else
-					verbose = 1; 
+					mz.verbose = 1; 
 				break;
 
 			case 'f':
-				solvc = argv[++i];
+				mz.solvc = argv[++i];
 				break;
 
 			case 'o':
-				fileout = 1;
+				mz.fileout = 1;
 				break;
 
 			// else, argument mismatch, show usage and abort
