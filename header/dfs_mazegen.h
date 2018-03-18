@@ -11,6 +11,4 @@ void next_depth(int currentX, int currentY);
 // allocates depth first search maze and starts dfs algorithm given from global vars
 void create_dfs_maze();
 
-#include "dfs_mazegen.c"
-
 #endif

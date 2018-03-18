@@ -1,7 +1,6 @@
 #ifndef HELPERS_H_
 #define HELPERS_H_
 
-
 // calculates the manhatten distance between two points
 float man_distance(int x, int y, int x2, int y2);
 
@@ -16,7 +15,5 @@ void show_usage();
 
 // evaluates given arguments from main and sets global variables according to the args
 void handle_args(int argc, char* argv[]);
-
-#include "helpers.c"
 
 #endif
