@@ -34,7 +34,7 @@ void next_depth(int currentX, int currentY)
 	get_dir(dir);				// init dir mz.array to random directions
 
 	// if there's a mz.delay, clear screen and print updated maze
-	if (mz.delay > 0)
+	if (mz.delay > 0 && mz.fileout == 0)
 	{
 		print_maze();
 		usleep(mz.delay); 
@@ -152,7 +152,14 @@ void next_depth(int currentX, int currentY)
 void create_dfs_maze() 
 {
 	// prime random 
-	srand(time(0)); 	
+	FILE* randstream = fopen("/dev/urandom", "rb"); 
+	unsigned int seed; 
+	fread(&seed, sizeof(unsigned int), 1, randstream); 
+	fclose(randstream); 
+	
+	//srand(time(0)); 	
+	srand(seed); 
+
 
 	// populate mz.array with given dimensions. array[mz.rows][mz.cols]
 	// allocate mz.rows * pointer to pointer of const char pointers
@@ -163,9 +170,9 @@ void create_dfs_maze()
 	// loop through each row
 	for (int i = 0; i < mz.rows; i++)
 	{
-		// for each row pointer, allocate mz.cols+2 (because of padding + newline) * const char pointers
+		// for each row pointer, allocate mz.cols+1 (because of newline) * const char pointers
 		// in other words, allocate the column pointers
-		mz.array[i] = (const char**) malloc((mz.cols+1) * sizeof(const char*)); // const char*[mz.cols+1];
+		mz.array[i] = (const char**) malloc((mz.cols + 1) * sizeof(const char*)); // const char*[mz.cols+1];
 		
 		// initialize all const char* in column to mz.wallc, then add \n as final char
 		int j = 0; 
@@ -191,6 +198,8 @@ void create_dfs_maze()
 			mz.startx = mz.rows - 1 - 2; 
 
 		mz.array[0][mz.startx] = mz.pathc;
+
+		// start recursive algoirhtm
 		next_depth(mz.startx, 1); 
 	}
 	else
@@ -198,17 +207,19 @@ void create_dfs_maze()
 		// mz.start left side
 		mz.starty = rand_rng(0, mz.rows - 1);
 
-		// mz.start pos must be odd
+		// mz.start pos must be odd 
 		if (mz.starty % 2 == 0) 
 			mz.starty -= 1; 
 
 		// should not .mz.start in corner
 		if (mz.starty <= 0)
-			mz.starty = 1; 
+			mz.starty = 1;
 		else if (mz.starty == mz.rows - 1) 
 			mz.starty = mz.rows - 1 - 2; 
 
 		mz.array[mz.starty][0] = mz.pathc; 
+		
+		// start recursive algorithm
 		next_depth(1, mz.starty);
 	}
 
@@ -217,14 +228,6 @@ void create_dfs_maze()
 	{
 		mz.endx = mz.cols - 2; 
 		mz.endy = mz.rows - 1; 
-#ifdef DEBUG
-		printf("Artificially setting end point"); 
-#endif
 	}
 	mz.array[mz.endy][mz.endx] = mz.pathc; 	
-	
-#ifdef DEBUG
-	printf("mz.startx: %d; stary: %d\n", mz.startx, mz.starty); 
-#endif
-	
 }

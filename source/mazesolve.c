@@ -67,18 +67,69 @@ void get_best_dir(int dir[4], int x, int y)
 // mz.starts maze solver depth first search 
 void solve_maze()
 {
-	// set mz.start path
-	mz.array[mz.starty][mz.startx] = mz.solvc; 
+	// set appropriate start char if fancy unicode is on
+	if (mz.fancyp) {
+
+		// allocate space for the fancy path characters
+		unipath = malloc(6 * sizeof(char*)); 
+
+		// set the unipath character style. This is chosen from commandline
+		static char* doubled[] = {"═", "║", "╔", "╗", "╚", "╝"}; 
+		static char* thin[] = {"─", "│", "┌", "┐", "└", "┘"}; 
+		static char* bold[] = {"━", "┃", "┏", "┓", "┗", "┛"}; 
+		static char** styles[] = { bold, thin, doubled }; 
+
+		unipath = styles[mz.fancyp - 1]; 
+
+		if (mz.startx == 0)
+			mz.array[mz.starty][0] = unipath[0]; 
+		else if (mz.starty == 0) 
+			mz.array[0][mz.startx] = unipath[1]; 
+	}
+	else 
+		// set mz.start path
+		mz.array[mz.starty][mz.startx] = mz.solvc; 
 	
 	// prime the dfs_solve algorithm for jump mz.starting it
 	if (mz.startx == 0) 
 		dfs_solve(1, mz.starty, 1);
 	else
 		dfs_solve(mz.startx, mz.starty + 1, 3); 
-	
-	// smz.end mz.end path
-	mz.array[mz.endy][mz.endx] = mz.solvc; 
 }
+
+// places appropriate corner if fancy path is enabled, given from and to 
+// from/to: 1=left ; 2=right; 3=up; 4=down 
+void put_corner(int y, int x, char from, char to) {
+
+	// convert from direction to unipath index
+	if (from == RIGHT) from = I_RIGHT; 
+	else if (from == LEFT) from = I_LEFT; 
+	else if (from == DOWN) from = I_DOWN; 
+	else if (from == UP) from = I_UP; 
+
+	// find appropriate corner to place. Use clever pre-processor arithemtic to condense 
+	// the cases into just 2 decisions. 
+	if (from == I_LEFT || from == I_RIGHT) {
+		if (to == LEFT) 
+			mz.array[y][x] = unipath[I_HOR]; 
+		else if (to == RIGHT) 
+			mz.array[y][x] = unipath[I_HOR]; 
+		else if (to == UP) 
+			mz.array[y][x] = unipath[I_UP + from]; 
+		else if (to == DOWN) 
+			mz.array[y][x] = unipath[I_DOWN + from]; 
+	}
+	else if (from == I_UP || from == I_DOWN) {
+		if (to == LEFT) 
+			mz.array[y][x] = unipath[I_LEFT + from];
+		else if (to == RIGHT) 
+			mz.array[y][x] = unipath[I_RIGHT + from];
+		else if (to == UP) 
+			mz.array[y][x] = unipath[I_VERT]; 
+		else if (to == DOWN) 
+			mz.array[y][x] = unipath[I_VERT]; 		
+	}
+}	
 
 // solves the maze with depth first search, correcting itself if 
 // dead mz.end reached and brute forcing until finish reached. 
@@ -86,18 +137,39 @@ void solve_maze()
 // from: 1=left ; 2=right; 3=up; 4=down 
 char dfs_solve(int currentX, int currentY, int from)
 {
-	mz.array[currentY][currentX] = mz.solvc; 
+	if (!mz.fancyp)
+		mz.array[currentY][currentX] = mz.solvc; 
 		
-	if (mz.solv_delay > 0) 
+	if (mz.solv_delay > 0 && mz.fileout == 0) 
 	{
 		print_maze();
 		usleep(mz.solv_delay); 
 	}
 
 	if (currentX == mz.endx && currentY == mz.endy - 1) 
+	{
+		if (mz.fancyp) 
+		{ 
+			put_corner(currentY, currentX, from, DOWN); 
+			mz.array[mz.endy][mz.endx] = unipath[I_VERT]; 
+		}
+		else 	
+			mz.array[mz.endy][mz.endx] = mz.solvc; 
+
 		return 1; 
+	}
 	if (currentY == mz.endy && currentX == mz.endx - 1)
+	{
+		if (mz.fancyp)
+	   	{
+			put_corner(currentY, currentX, from, RIGHT); 
+			mz.array[mz.endy][mz.endx] = unipath[I_HOR]; 
+		}
+		else 
+			mz.array[mz.endy][mz.endx] = mz.solvc; 
+
 		return 1; 
+	}
 	
 	// populate dir mz.array; holds best direction in lowest index
 	int dir[4] = {infinity, infinity, infinity, infinity}; 
@@ -112,9 +184,9 @@ char dfs_solve(int currentX, int currentY, int from)
 		switch (dir[d]) 
 		{
 			// go left 
-			case 1: 
+			case LEFT: 
 				// if best direction is the direction we came from, return
-				if (from == 1)
+				if (from == LEFT)
 					continue; 
 
 				// check left bounds
@@ -125,11 +197,16 @@ char dfs_solve(int currentX, int currentY, int from)
 				if (mz.array[currentY][currentX - 2] != mz.pathc) 
 					continue; 
 				
-				// if not, move 1 cell left
-				mz.array[currentY][currentX - 1] = mz.solvc; 
-				
+				// now we must move 2 cell to left. We know from cell = from and to cell = left
+				if (!mz.fancyp) 	
+					mz.array[currentY][currentX - 1] = mz.solvc; 
+				else {
+					put_corner(currentY, currentX, from, LEFT);			// place appropriate corner or horizontal / vertical
+					mz.array[currentY][currentX - 1] = unipath[I_HOR];	// place horizontal since to is always left 
+				}
+			
 				// recurse deeper
-				if (dfs_solve(currentX - 2, currentY, 2))
+				if (dfs_solve(currentX - 2, currentY, RIGHT))
 					return 1; 
 
 				// if this code is reached, it means that the path that was previously
@@ -140,9 +217,9 @@ char dfs_solve(int currentX, int currentY, int from)
 				break;
 
 			// go right
-			case 2:
+			case RIGHT:
 				// if best direction is the direction we came from, return
-				if (from == 2)
+				if (from == RIGHT)
 					continue; 
 
 				// check right bounds
@@ -152,12 +229,16 @@ char dfs_solve(int currentX, int currentY, int from)
 				// check if path already taken
 				if (mz.array[currentY][currentX + 2] != mz.pathc) 
 					continue; 
-				
-				// if not, move 1 cell right
-				mz.array[currentY][currentX + 1] = mz.solvc; 
+
+				if (!mz.fancyp) 	
+					mz.array[currentY][currentX + 1] = mz.solvc; 
+				else {
+					put_corner(currentY, currentX, from, RIGHT);		// place appropriate corner or horizontal / vertical
+					mz.array[currentY][currentX + 1] = unipath[I_HOR];	// place horizontal since to is always right 
+				}
 				
 				// recurse deeper
-				if (dfs_solve(currentX + 2, currentY, 1))
+				if (dfs_solve(currentX + 2, currentY, LEFT))
 					return 1; 
 				
 				// dead mz.end, reverse
@@ -166,9 +247,9 @@ char dfs_solve(int currentX, int currentY, int from)
 				break;
 
 			// go up
-			case 3:		
+			case UP:		
 				// if best direction is the direction we came from, return
-				if (from == 3)
+				if (from == UP)
 					continue; 
 
 				// check top bounds
@@ -178,12 +259,17 @@ char dfs_solve(int currentX, int currentY, int from)
 				// check if path already taken
 				if (mz.array[currentY - 2][currentX] != mz.pathc) 
 					continue; 
-				
-				// if not, move 1 cell up
-				mz.array[currentY - 1][currentX] = mz.solvc; 
-				
+	
+				// place path
+				if (!mz.fancyp) 	
+					mz.array[currentY - 1][currentX] = mz.solvc; 
+				else {
+					put_corner(currentY, currentX, from, UP);			// place appropriate corner or horizontal / vertical
+					mz.array[currentY - 1][currentX] = unipath[I_VERT];	// place vertical since to is always up 
+				}			
+
 				// recurse deeper
-				if (dfs_solve(currentX, currentY - 2, 4))
+				if (dfs_solve(currentX, currentY - 2, DOWN))
 					return 1; 
 
 				// failed, go back
@@ -192,7 +278,7 @@ char dfs_solve(int currentX, int currentY, int from)
 				break;
 
 			// go down
-			case 4: 
+			case DOWN: 
 				// if best direction is the direction we came from, return
 				if (from == 4)
 					continue; 
@@ -205,19 +291,22 @@ char dfs_solve(int currentX, int currentY, int from)
 				if (mz.array[currentY + 2][currentX] != mz.pathc) 
 					continue; 
 				
-				// if not, move 1 cell down
-				mz.array[currentY + 1][currentX] = mz.solvc; 
-				
+				// place path
+				if (!mz.fancyp) 	
+					mz.array[currentY + 1][currentX] = mz.solvc; 
+				else {
+					put_corner(currentY, currentX, from, DOWN);			// place appropriate corner or horizontal / vertical
+					mz.array[currentY + 1][currentX] = unipath[I_VERT];	// place vertical since to is always down 
+				}			
+
 				// recurse deeper
-				if(dfs_solve(currentX, currentY + 2, 3))
+				if(dfs_solve(currentX, currentY + 2, UP))
 					return 1; 
 				
 				// dead mz.end, reverse
 				mz.array[currentY + 1][currentX] = mz.pathc; 
 				mz.array[currentY + 2][currentX] = mz.pathc; 
 				break;
-	//		default: 
-				//printf("Fatal error in direction calculation\n"); 
 		}
 	}
 	return 0; 

@@ -11,8 +11,32 @@
 
 #define infinity 999999
 
+// direction pre-processors
+// from/to: 1=left ; 2=right; 3=up; 4=down 
+#define LEFT 1
+#define RIGHT 2
+#define UP 3
+#define DOWN 4
+
+// unipath index pre-processors
+#define I_HOR 0
+#define I_VERT 1
+#define I_DOWN 2
+#define I_UP 4
+#define I_RIGHT 0
+#define I_LEFT 1
+
+
+// array of array of characters for fancy unicode maze path
+// 0: horizontal;  1: vertical;  2: down-right;  3: down-left;  4: up-right;  5: up-left
+char** unipath; 
+
 // starts dfs maze solve procedure
 void solve_maze();
+
+// places appropriate corner if fancy path is enabled, given from and to 
+// from/to: 1=left ; 2=right; 3=up; 4=down 
+void put_corner(int y, int x, char from, char to);
 
 // gets the bets possible direction for the cell to move onto
 // by taking into account the possible directions and the
