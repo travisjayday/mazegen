@@ -1,75 +1,75 @@
-
-// inserts shortest distance into array
-// loops through array, checks if array distance is longer than new distance
-// if it is, inserts shortest distance into array with shifting like this:
-// example: insert_dir({1, 2, 3, 4}, 1, 4) 
-// output: {1, 4, 2, 3} (4 was inserted into pos 1) 
-// final array will be ordered from least to greatest
-void calc_shortest(int dir[4], int shortest_d[4], int x, int y, int move)
-{
-	// calc distance 
-	int d = man_distance(x, y, endx, endy); 
-
-	for (int j = 0; j < 4; j++)
-	{
-		// loop through shortest distances, if new distance is shorter
-		// than any elems of the arr, then add it to the arr
-		// and shift all array elems to the right
-		if (shortest_d[j] > d) 
-		{
-			int p = j; 	// copy position j for later
-			// shift elements to the right of p (position)
-			// to one to the right and move d into original p
-			// basically updating least distance array orderly
-			for (int i = 2; i >= 0 && 2 - p >= 0; i--, p++)
-			{
-				dir[i+1] = dir[i];
-				shortest_d[i+1] = shortest_d[i]; 
-			}
-			dir[j] = move;
-			shortest_d[j] = d;
-			break;	
-		}
-	}
-}	
+#include "dfs_mazesolve.h"
 
 // gets the bets possible direction for the cell to move onto
 // by taking into account the possible directions and the
 // distance from cell to end cell
-// dir [index] 
-// 0=left ; 1=right; 2=up; 3=down 
+// populates the dir array, where dir[0] is best direction (left, right, up, down)
+// and dir[3] is worst direction 
 void get_best_dir(int dir[4], int x, int y)
 {
 	int shortest_d[4] = {infinity, infinity, infinity, infinity}; 
 
 	// eval left dir
-	if (x -1 >= 0 && (array[y][x-1] == pathc))
-		calc_shortest(dir, shortest_d, x-1, y, 1); 
+	if (x - 1 >= 0 && (array[y][x-1] == pathc))
+	{
+		shortest_d[0] = man_distance(x - 1, y, endx, endy); 
+		dir[0] = 1; 	
+	}
 
 	// eval right dir	
-	if (x + 1 <= cols-1 && (array[y][x+1] == pathc))
-		calc_shortest(dir, shortest_d, x+1, y, 2); 
+	if (x + 1 <= cols - 1 && (array[y][x+1] == pathc))
+	{
+		shortest_d[1] = man_distance(x + 1, y, endx, endy); 
+		dir[1] = 2; 
+	}
 	
 	// eval up dir	
-       	if (y-1 >= 0 && (array[y-1][x] == pathc))
-		calc_shortest(dir, shortest_d, x, y-1, 3); 
+    if (y - 1 >= 0 && (array[y-1][x] == pathc))
+	{
+		shortest_d[2] = man_distance(x, y - 1, endx, endy); 
+		dir[2] = 3; 
+	}
 	
 	// eval down dir 
 	if (y + 1 <= rows-1 && (array[y+1][x] == pathc))
-		calc_shortest(dir, shortest_d, x, y+1, 4); 
+	{
+		shortest_d[3] = man_distance(x, y + 1, endx, endy); 
+		dir[3] = 4; 
+	}
+
+	// now all possible distances are in shortest_d. however, it is unsorted. 
+	// it must be sorted in ascending order. At the same time, however, 
+	// the direction must be kept track of, so the dir[] array must be sorted 
+	// in the same manner as the shortest_d array
+	for (int i = 1; i < 4; i++) 
+	{
+		int j = i; 
+		while (j > 0 && shortest_d[j-1] > shortest_d[j]) 
+		{
+			int t = shortest_d[j]; 
+			shortest_d[j] = shortest_d[j-1]; 
+			shortest_d[j-1] = t; 
+
+			int t2 = dir[j]; 
+			dir[j] = dir[j-1]; 
+			dir[j-1] = t2; 
+
+			j--; 
+		}		
+	}
 }
 
 // starts maze solver depth first search 
 void solve_maze()
 {
-	// send start path
+	// set start path
 	array[starty][startx] = solvc; 
 	
 	// prime the dfs_solve algorithm for jump starting it
 	if (startx == 0) 
-		dfs_solve(startx+1, starty, 1);
+		dfs_solve(1, starty, 1);
 	else
-		dfs_solve(startx, starty+1, 3); 
+		dfs_solve(startx, starty + 1, 3); 
 	
 	// send end path
 	array[endy][endx] = solvc; 
@@ -78,6 +78,7 @@ void solve_maze()
 // solves the maze with depth first search, correcting itself if 
 // dead end reached and brute forcing until finish reached. 
 // returns true if end reached
+// from: 1=left ; 2=right; 3=up; 4=down 
 char dfs_solve(int currentX, int currentY, int from)
 {
 	array[currentY][currentX] = solvc; 
@@ -88,15 +89,18 @@ char dfs_solve(int currentX, int currentY, int from)
 		usleep(solv_delay); 
 	}
 
-	if (endy == rows && currentX == endx && currentY == endy-1) 
-	       	return 1; 
-	if (endx == cols && currentY == endy && currentX == endx-1) 
+	if (currentX == endx && currentY == endy - 1) 
 		return 1; 
-
+	if (currentY == endy && currentX == endx - 1)
+		return 1; 
+	
+	// populate dir array; holds best direction in lowest index
 	int dir[4] = {infinity, infinity, infinity, infinity}; 
 	get_best_dir(dir, currentX, currentY);		
+
 	// loop through each possible move left, right, top, down 
 	// moves are ordered according to their distance to end
+	// eg. dir[0] is best possible move, dir[1] is second best, dir[3] is worst move
 	for (int d = 0; d < 4; d++) 
 	{
 		// switch on dir 
@@ -113,17 +117,21 @@ char dfs_solve(int currentX, int currentY, int from)
 					continue; 
 				
 				// check if path already taken
-				if (array[currentY][currentX-2] != pathc) 
+				if (array[currentY][currentX - 2] != pathc) 
 					continue; 
 				
 				// if not, move 1 cell left
-				array[currentY][currentX-1] = solvc; 
+				array[currentY][currentX - 1] = solvc; 
 				
 				// recurse deeper
-				if (dfs_solve(currentX-2, currentY, 2))
+				if (dfs_solve(currentX - 2, currentY, 2))
 					return 1; 
-				array[currentY][currentX-1] = pathc; 
-				array[currentY][currentX-2] = pathc; 
+
+				// if this code is reached, it means that the path that was previously
+				// taking was a bad path (dead end). Thus, we must reverse the process
+				// by setting current block back to empty path
+				array[currentY][currentX - 1] = pathc; 
+				array[currentY][currentX - 2] = pathc; 
 				break;
 
 			// go right
@@ -137,18 +145,19 @@ char dfs_solve(int currentX, int currentY, int from)
 					continue; 
 				
 				// check if path already taken
-				if (array[currentY][currentX+2] != pathc) 
+				if (array[currentY][currentX + 2] != pathc) 
 					continue; 
 				
 				// if not, move 1 cell right
-				array[currentY][currentX+1] = solvc; 
+				array[currentY][currentX + 1] = solvc; 
 				
 				// recurse deeper
-				if (dfs_solve(currentX+2, currentY, 1))
+				if (dfs_solve(currentX + 2, currentY, 1))
 					return 1; 
 				
-				array[currentY][currentX+1] = pathc; 
-				array[currentY][currentX+2] = pathc; 
+				// dead end, reverse
+				array[currentY][currentX + 1] = pathc; 
+				array[currentY][currentX + 2] = pathc; 
 				break;
 
 			// go up
@@ -162,18 +171,19 @@ char dfs_solve(int currentX, int currentY, int from)
 					continue; 
 				
 				// check if path already taken
-				if (array[currentY-2][currentX] != pathc) 
+				if (array[currentY - 2][currentX] != pathc) 
 					continue; 
 				
 				// if not, move 1 cell up
-				array[currentY-1][currentX] = solvc; 
+				array[currentY - 1][currentX] = solvc; 
 				
 				// recurse deeper
-				if (dfs_solve(currentX, currentY-2, 4))
+				if (dfs_solve(currentX, currentY - 2, 4))
 					return 1; 
+
+				// failed, go back
 				array[currentY-1][currentX] = pathc; 
 				array[currentY-2][currentX] = pathc; 
-
 				break;
 
 			// go down
@@ -187,20 +197,22 @@ char dfs_solve(int currentX, int currentY, int from)
 					continue; 
 				
 				// check if path already taken
-				if (array[currentY+2][currentX] != pathc) 
+				if (array[currentY + 2][currentX] != pathc) 
 					continue; 
 				
 				// if not, move 1 cell down
-				array[currentY+1][currentX] = solvc; 
+				array[currentY + 1][currentX] = solvc; 
 				
 				// recurse deeper
-				if(dfs_solve(currentX, currentY+2, 3))
+				if(dfs_solve(currentX, currentY + 2, 3))
 					return 1; 
 				
-				array[currentY+1][currentX] = pathc; 
-				array[currentY+2][currentX] = pathc; 
-
+				// dead end, reverse
+				array[currentY + 1][currentX] = pathc; 
+				array[currentY + 2][currentX] = pathc; 
 				break;
+			default: 
+				printf("Fatal error in direction calculation\n"); 
 		}
 	}
 	return 0; 

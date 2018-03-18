@@ -21,7 +21,7 @@ void calc_shortest(int dir[4], int shortest_d[4], int x, int y, int move);
 // by taking into account the possible directions and the
 // distance from cell to end cell
 // dir [index] 
-// 0=left ; 1=right; 2=up; 3=down 
+// 0=left; 1=right; 2=up; 3=down 
 void get_best_dir(int dir[4], int x, int y);
 
 

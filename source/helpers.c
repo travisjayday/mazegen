@@ -1,38 +1,44 @@
 #include "helpers.h"
 #include "locale.h"
 
+// finds the manhatten distance between two points
+// benefit: do not use square root which is computationally expensive
 float man_distance(int x, int y, int x2, int y2) 
 {
-	// d = sqrt((x-x2)^2 + (y-y2)^2)
 	return abs(x - x2) + abs(y - y2);   
 //	return sqrt(pow(x-x2, 2) + pow(y-y2, 2));
 }
 
-// prints maze
+// prints maze to screen 
 void print_maze()
 {
+	// for performance reasons, must print maze to buffer in memory, 
+	// then output buffer to screen in one go
 	static char* buffer;
+
+	// make sure to only allocate the buffer once to avoid memory overflow
 	static char a = 0; 
 	if (!a) 
 	{
-		buffer = (char*) malloc(cols * rows * 4); 
+		buffer = (char*) malloc(cols * rows * 4); 	// allocate enough memory; 1 unicode char = 4 bytes
 		a = 1; 
 	}
+
 	int p = 0;
-	
-	for (int i = 0; i < rows+1; i++) 
+	for (int i = 0; i < rows; i++) 
 	{
-		for (int j = 0; j < cols+2; j++)	// print newline char +1 
+		for (int j = 0; j < cols + 1; j++)			// print newline char +1 
 		{
 			// write unicode char to buffer and increment offset pointer
 			// bar # of characters written (for next char) 
-			p+= sprintf(buffer+p, "%s",  array[i][j]);
+			p += sprintf(buffer + p, "%s",  array[i][j]);
 		}
 	}
+
 	if (!fileout)
 		printf("\033[;H%s", buffer);	// move cursor to top of screen instead of clearing 
 	else
-		printf("%s", buffer); 		// just print regularlry
+		printf("%s", buffer); 			// just print regularlry
 }
 
 // gets random number inclusively. 
@@ -79,8 +85,13 @@ void handle_args(int argc, char* argv[])
 				cols = atoi(argv[++i]);
 				rows = atoi(argv[++i]);
 
-				if (cols <= 0 || rows <= 0)		
-					show_usage(); 
+				// if dimensions are odd or below zero 
+				if ((cols % 2 == 0 || rows % 2 == 0) || (cols <= 0 || rows <= 0))
+				{
+					printf("Dimensions mustn't be even!"); 
+					fflush(stdout); 
+					_exit(-1); 
+				}
 				break;
 			
 			// set delay to argv + 1 if it's number and if it exists, else do default delay
