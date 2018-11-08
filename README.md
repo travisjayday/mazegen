@@ -1,5 +1,5 @@
 # mazegen
-An ASCII/Unicode maze generator and solver
+An ASCII/Unicode maze generator and solver that runs in your Linux shell. See colorful, wacky, customized mazes unfold in your terminal in real time. 
 
 # examples
 ![example1](/examples/default.png?raw=true "Default maze")
